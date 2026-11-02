@@ -108,8 +108,8 @@ main{display:flex;flex-direction:column;gap:12px;padding-block:14px calc(84px + 
 .empty b{display:block;color:var(--fg);margin-bottom:4px}
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-nav.tabs .wrap{display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
-nav.tabs a{min-height:58px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--muted);font-size:13px;font-weight:600;border-top:3px solid transparent}
+nav.tabs .wrap{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
+nav.tabs a{min-height:58px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--muted);font-size:12.5px;font-weight:600;border-top:3px solid transparent}
 nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 :root[data-theme="dark"] nav.tabs a[aria-current="page"]{border-top-color:var(--good)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) nav.tabs a[aria-current="page"]{border-top-color:var(--good)}}
@@ -124,6 +124,23 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 .lock button{min-height:48px;border:0;border-radius:10px;background:var(--brand-2);color:var(--on-brand);font-weight:700;font-size:16px;cursor:pointer}
 .lock .err{color:var(--bad);font-size:14px;min-height:1.2em}
 .linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:12px;cursor:pointer;padding:8px}
+.ytiles{margin-top:2px}
+.ytiles .tile{background:var(--brand)}
+.ychart{padding:14px 12px 10px}
+.yrow{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:4px;align-items:end}
+.ycol{display:flex;flex-direction:column;align-items:center;gap:6px;min-width:0}
+.yplot{position:relative;width:100%}
+.yzero{position:absolute;left:0;right:0;height:1px;background:var(--line)}
+.yplot .yb{position:absolute;left:15%;right:15%;border-radius:3px 3px 0 0}
+.yb{display:inline-block;background:var(--good)}
+.yb.cur{background:color-mix(in srgb,var(--good) 55%,transparent)}
+.yb.fut{background:var(--track)}
+.yb.neg{background:var(--bad);border-radius:0 0 3px 3px}
+.ym{font-size:11px;color:var(--muted);font-weight:600}
+.ym.now{color:var(--fg);font-weight:800}
+.ylegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);padding-top:12px}
+.ylegend .yb{width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.ymax{margin:6px 0 0;font-size:11.5px;color:var(--muted)}
 @media (prefers-reduced-motion: no-preference){.bar i{transition:width .4s ease}}
 </style>
 
@@ -155,6 +172,7 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
     <a href="#budget" data-tab="budget">Budget</a>
     <a href="#expenses" data-tab="expenses">Expenses</a>
     <a href="#groceries" data-tab="groceries">Groceries</a>
+    <a href="#year" data-tab="year">Year</a>
   </div>
 </nav>
 </div>
@@ -329,12 +347,87 @@ function groceriesHTML(r){
   return h;
 }
 
+/* ---------- year view ---------- */
+const MON3=["J","F","M","A","M","J","J","A","S","O","N","D"];
+function yearsRange(){const st=Number((S.config.startMonth||"2026-11").slice(0,4));const end=Math.max(Number(todayKey().slice(0,4)),st);const out=[];for(let y=st;y<=end+1;y++)out.push(y);return out}
+function yearData(y){
+  const start=S.config.startMonth||"2026-11", now=todayKey();
+  const months=[];for(let m=1;m<=12;m++){const k=y+"-"+String(m).padStart(2,"0");if(k>=start)months.push(k)}
+  const lines={}; const add=(l,kind)=>lines[l.id]||(lines[l.id]={id:l.id,name:l.name,group:l.group,kind,budget:0,actual:0,toDate:0});
+  let income=0,incomeToDate=0,saved=0,projected=0,extras=0; const bars=[];
+  for(const k of months){
+    const r=compute(k), st=k<now?"closed":k===now?"current":"future";
+    const frac=st==="closed"?1:st==="current"?new Date().getDate()/daysIn(k):0;
+    income+=r.income; if(st!=="future")incomeToDate+=r.income;
+    for(const l of r.fixed){const o=add(l,"fixed");o.budget+=l.budget;if(st!=="future"){o.actual+=l.budget;o.toDate+=l.budget}}
+    for(const l of r.variable){const o=add(l,"variable");o.budget+=l.budget;o.actual+=l.spent;o.toDate+=Math.round(l.budget*frac)}
+    for(const l of r.reserves){const o=add(l,"reserve");o.budget+=l.budget;o.actual+=l.paid;if(st!=="future")o.toDate+=l.budget}
+    extras+=r.extras;
+    // closed months count what was really saved; this month counts its plan minus any overspend so far
+    const v=st==="closed"?r.saved:st==="current"?r.planned+Math.min(0,r.sweep):r.planned;
+    if(st==="closed")saved+=v; projected+=v;
+    bars.push({k,st,v});
+  }
+  return {y,months,lines:Object.values(lines),income,incomeToDate,saved,projected,extras,bars};
+}
+function yearChart(d){
+  const max=Math.max(1,...d.bars.map(b=>Math.abs(b.v)));
+  const hasNeg=d.bars.some(b=>b.v<0);
+  const H=120, top=hasNeg?Math.round(H*0.7):H;
+  let cols="";
+  for(let m=1;m<=12;m++){
+    const k=d.y+"-"+String(m).padStart(2,"0"); const b=d.bars.find(x=>x.k===k);
+    let bar="";
+    if(b){const h=Math.max(2,Math.round(Math.abs(b.v)/max*(b.v<0?H-top:top)));
+      const cls=b.v<0?"neg":b.st==="future"?"fut":b.st==="current"?"cur":"";
+      bar=b.v>=0?`<i class="yb ${cls}" style="height:${h}px;bottom:${H-top}px" title="${esc(label(k))}: ${money(b.v)}"></i>`:`<i class="yb neg" style="height:${h}px;top:${top}px" title="${esc(label(k))}: −${money(-b.v)}"></i>`}
+    cols+=`<div class="ycol"><div class="yplot" style="height:${H}px">${bar}<span class="yzero" style="bottom:${H-top}px"></span></div><span class="ym${b&&b.st==="current"?" now":""}">${MON3[m-1]}</span></div>`;
+  }
+  return `<div class="card ychart" role="img" aria-label="Savings per month in ${d.y}"><div class="yrow">${cols}</div>
+  <div class="ylegend"><span><i class="yb"></i>Saved</span><span><i class="yb cur"></i>This month (plan)</span><span><i class="yb fut"></i>Planned</span>${hasNeg?'<span><i class="yb neg"></i>Overspent</span>':""}</div><p class="ymax">Tallest bar: HK$ ${money(max)}</p></div>`;
+}
+function yearHTML(d){
+  if(!d.months.length)return `<div class="card empty"><b>Tracking starts ${esc(label(S.config.startMonth))}</b>Nothing to show for ${d.y}.</div>`;
+  const first=label(d.months[0]).split(" ")[0], partial=d.months.length<12;
+  let h=`<div class="tiles ytiles">
+    <div class="tile"><span>Income ${partial?first+"–Dec":"for the year"}</span><b>${money(d.income)}</b></div>
+    <div class="tile"><span>Banked so far</span><b class="${d.saved>=0?"pos":"neg"}">${d.saved<0?"−":""}${money(Math.abs(d.saved))}</b></div>
+    <div class="tile"><span>Projected by Dec</span><b class="${d.projected>=0?"pos":"neg"}">${d.projected<0?"−":""}${money(Math.abs(d.projected))}</b></div></div>`;
+  h+=`<div class="label"><span>Savings by month</span><span>${partial?"from "+esc(first):""}</span></div>`+yearChart(d);
+  const sect=(title,kind,actualLabel)=>{
+    const ls=d.lines.filter(l=>l.kind===kind); if(!ls.length)return "";
+    const tb=ls.reduce((s,l)=>s+l.budget,0), ta=ls.reduce((s,l)=>s+l.actual,0);
+    let x=`<div class="label"><span>${title}</span><span>${money(ta)} / ${money(tb)}</span></div><div class="card">`;
+    for(const l of ls){
+      const over=kind==="variable"&&l.actual>l.toDate&&l.actual>0, bad=l.actual>l.budget;
+      const note=kind==="variable"?(l.actual?`${bad?"Over the yearly budget":over?"Ahead of budget to date":"Within budget to date"} · ${money(l.toDate)} budgeted so far`:`${money(l.toDate)} budgeted so far`):kind==="reserve"?`${money(l.toDate)} set aside so far · ${actualLabel}`:"Posted in full each month";
+      x+=`<div class="meter"><div class="top"><b>${esc(l.name)}</b><span class="v">${money(l.actual)} / ${money(l.budget)}</span></div><div class="bar"><i class="${bad?"bad":over?"warn":kind==="fixed"?"ink":""}" style="width:${pct(l.actual,l.budget)}%"></i></div><div class="note ${bad?"bad":over?"warn":""}">${note}</div></div>`;
+    }
+    return x+`</div>`};
+  h+=sect("Variable · spent / year budget","variable");
+  h+=`<div class="card rows"><div class="row"><span class="n">Extras, not budgeted<small>Paid from savings</small></span><span class="v">${money(d.extras)}</span></div></div>`;
+  h+=sect("Fixed · posted / year budget","fixed");
+  h+=sect("Reserves · paid / year budget","reserve","bills paid shown first");
+  h+=`<p class="status" style="text-align:left">Banked so far counts closed months only. Projected by Dec adds this month and the months to come at their planned savings, minus any overspend already logged.</p>`;
+  return h;
+}
+
 function render(){
   const view=document.getElementById("view"), hero=document.getElementById("hero");
   document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===S.tab?"page":"false"));
   if(!S.config){
     hero.innerHTML="";
     view.innerHTML=S.live?`<div class="card empty"><b>No budget set up yet</b>The budget file is empty.</div>`:`<div class="card empty"><b>Loading your budget</b>Expenses appear here as receipts are logged.</div>`;
+    return;
+  }
+  if(S.tab==="year"){
+    const ys=yearsRange(); if(!S.year||!ys.includes(S.year))S.year=Number(todayKey().slice(0,4)); if(!ys.includes(S.year))S.year=ys[0];
+    const yi=ys.indexOf(S.year);
+    document.getElementById("prev").disabled=yi<=0; document.getElementById("next").disabled=yi>=ys.length-1;
+    document.getElementById("monthName").textContent=String(S.year);
+    document.getElementById("monthSub").textContent=S.year<Number(todayKey().slice(0,4))?"Closed year":S.year>Number(todayKey().slice(0,4))?"Budgeted":"Year to date";
+    document.getElementById("heroBand").hidden=true;
+    view.innerHTML=yearHTML(yearData(S.year))+`<p class="status">${S.updated?"Last updated "+esc(new Date(S.updated).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}</p>`;
     return;
   }
   const range=monthsRange(); if(!S.month||!range.includes(S.month))S.month=range.includes(todayKey())?todayKey():range[range.length-1];
@@ -350,10 +443,10 @@ function render(){
     +`<p class="status">${S.updated?"Last updated "+esc(new Date(S.updated).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}<br><button class="linkbtn" id="forget" type="button">Lock this phone</button></p>`;
 }
 
-function route(){const t=(location.hash||"").slice(1);S.tab=["overview","budget","expenses","groceries"].includes(t)?t:"overview";render();window.scrollTo(0,0)}
+function route(){const t=(location.hash||"").slice(1);S.tab=["overview","budget","expenses","groceries","year"].includes(t)?t:"overview";render();window.scrollTo(0,0)}
 window.addEventListener("hashchange",route);
-document.getElementById("prev").addEventListener("click",()=>{const r=monthsRange();const i=r.indexOf(S.month);if(i>0){S.month=r[i-1];render()}});
-document.getElementById("next").addEventListener("click",()=>{const r=monthsRange();const i=r.indexOf(S.month);if(i<r.length-1){S.month=r[i+1];render()}});
+document.getElementById("prev").addEventListener("click",()=>{if(S.tab==="year"){S.year--;render();return}const r=monthsRange();const i=r.indexOf(S.month);if(i>0){S.month=r[i-1];render()}});
+document.getElementById("next").addEventListener("click",()=>{if(S.tab==="year"){S.year++;render();return}const r=monthsRange();const i=r.indexOf(S.month);if(i<r.length-1){S.month=r[i+1];render()}});
 document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.closest("[data-f]");if(b){S.filter=b.dataset.f;render()}});
 route();
 
