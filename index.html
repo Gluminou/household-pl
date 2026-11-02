@@ -143,6 +143,17 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 .ymax{margin:6px 0 0;font-size:11.5px;color:var(--muted)}
 .actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .act{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-weight:700;font-size:14px;cursor:pointer}
+.split{padding:14px;display:flex;flex-direction:column;gap:12px}
+.splitbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--track)}
+.splitbar i{display:block;height:100%}
+.sm{background:var(--brand-2)} .wm{background:var(--good)}
+.splitrows{display:flex;flex-direction:column}
+.splitrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
+.splitrow:first-child{border-top:0;padding-top:0}
+.splitrow .dot{width:10px;height:10px;border-radius:3px;flex:0 0 auto}
+.splitrow .n{flex:1;min-width:0}
+.splitrow .n small,.splitrow .v small{display:block;font-size:12px;color:var(--muted);font-weight:500}
+.splitrow .v{text-align:right;white-space:nowrap}
 @media (prefers-reduced-motion: no-preference){.bar i{transition:width .4s ease}}
 </style>
 
@@ -327,13 +338,24 @@ function expensesHTML(r){
 function groceriesHTML(r){
   const g=r.variable.find(l=>l.id==="groceries")||{spent:0,budget:0};
   const items=[];for(const e of r.ents.filter(e=>e.category==="groceries")){
-    if(e.items&&e.items.length){for(const i of e.items)items.push({...i,where:e.merchant})}
+    if(e.items&&e.items.length){for(const i of e.items)items.push({...i,where:e.merchant,src:e.source})}
     else items.push({name:e.merchant,type:"Other",amount:e.amount,where:e.merchant});
   }
   const types=S.config.groceryTypes||[];
   const byType={};for(const i of items){const t=types.includes(i.type)?i.type:"Other";byType[t]=(byType[t]||0)+c(i.amount)}
   const total=items.reduce((s,i)=>s+c(i.amount),0);
   let h=`<div class="card">${meter("Groceries",g.spent,g.budget,r.k)}</div>`;
+  // where the money goes: printed receipts = supermarket, handwritten = wet market
+  const gEnts=r.ents.filter(e=>e.category==="groceries");
+  const src={supermarket:{name:"Supermarket",note:"Printed receipts",amt:0,n:0},wetmarket:{name:"Wet market",note:"Handwritten notes",amt:0,n:0}};
+  for(const e of gEnts){const k=src[e.source]?e.source:"supermarket";src[k].amt+=c(e.amount);src[k].n++}
+  const gTot=src.supermarket.amt+src.wetmarket.amt;
+  if(gTot){
+    const sp=Math.round(src.supermarket.amt/gTot*100), wp=100-sp;
+    h+=`<div class="label"><span>Supermarket vs wet market</span><span>${gEnts.length} receipts</span></div><div class="card split">
+      <div class="splitbar" role="img" aria-label="Supermarket ${sp}%, wet market ${wp}%"><i class="sm" style="width:${sp}%"></i><i class="wm" style="width:${wp}%"></i></div>
+      <div class="splitrows">${["supermarket","wetmarket"].map(k=>{const o=src[k],p=k==="supermarket"?sp:wp;return `<div class="splitrow"><span class="dot ${k==="supermarket"?"sm":"wm"}"></span><span class="n"><b>${o.name}</b><small>${o.n} ${o.n===1?"receipt":"receipts"} · ${o.note}${o.n?" · avg "+money(Math.round(o.amt/o.n)):""}</small></span><span class="v"><b>${money(o.amt)}</b><small>${p}%</small></span></div>`}).join("")}</div></div>`;
+  }
   h+=`<div class="label"><span>By type</span><span>share of grocery spend</span></div>`;
   if(!total){h+=`<div class="card empty"><b>No groceries logged yet</b>Each item on a receipt is sorted into one of ${types.length} types.</div>`;return h}
   const used=types.filter(t=>byType[t]).sort((a,b)=>byType[b]-byType[a]);
@@ -453,7 +475,7 @@ document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.
 route();
 
 /* ---------- updates and sharing ---------- */
-const APP_VERSION="202611021333";
+const APP_VERSION="202611021341";
 async function checkVersion(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
     if(j.v&&j.v!==APP_VERSION){location.replace(location.pathname+"?v="+encodeURIComponent(j.v)+location.hash)}}catch(e){}
