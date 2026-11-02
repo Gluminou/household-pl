@@ -154,6 +154,13 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 .splitrow .n{flex:1;min-width:0}
 .splitrow .n small,.splitrow .v small{display:block;font-size:12px;color:var(--muted);font-weight:500}
 .splitrow .v{text-align:right;white-space:nowrap}
+.bar.stack{display:flex}
+.bar.stack i{border-radius:0}
+.bar.stack i:first-child{border-radius:4px 0 0 4px}
+.bar.stack i:last-child{border-radius:0 4px 4px 0}
+.bar.stack i:only-child{border-radius:4px}
+.typelegend{display:flex;gap:16px;font-size:12px;color:var(--muted);font-weight:600;padding:0 2px}
+.typelegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 @media (prefers-reduced-motion: no-preference){.bar i{transition:width .4s ease}}
 </style>
 
@@ -339,10 +346,10 @@ function groceriesHTML(r){
   const g=r.variable.find(l=>l.id==="groceries")||{spent:0,budget:0};
   const items=[];for(const e of r.ents.filter(e=>e.category==="groceries")){
     if(e.items&&e.items.length){for(const i of e.items)items.push({...i,where:e.merchant,src:e.source})}
-    else items.push({name:e.merchant,type:"Other",amount:e.amount,where:e.merchant});
+    else items.push({name:e.merchant,type:"Other",amount:e.amount,where:e.merchant,src:e.source});
   }
   const types=S.config.groceryTypes||[];
-  const byType={};for(const i of items){const t=types.includes(i.type)?i.type:"Other";byType[t]=(byType[t]||0)+c(i.amount)}
+  const byType={},byTypeWm={};for(const i of items){const t=types.includes(i.type)?i.type:"Other";byType[t]=(byType[t]||0)+c(i.amount);if(i.src==="wetmarket")byTypeWm[t]=(byTypeWm[t]||0)+c(i.amount)}
   const total=items.reduce((s,i)=>s+c(i.amount),0);
   let h=`<div class="card">${meter("Groceries",g.spent,g.budget,r.k)}</div>`;
   // where the money goes: printed receipts = supermarket, handwritten = wet market
@@ -359,8 +366,15 @@ function groceriesHTML(r){
   h+=`<div class="label"><span>By type</span><span>share of grocery spend</span></div>`;
   if(!total){h+=`<div class="card empty"><b>No groceries logged yet</b>Each item on a receipt is sorted into one of ${types.length} types.</div>`;return h}
   const used=types.filter(t=>byType[t]).sort((a,b)=>byType[b]-byType[a]);
-  h+=`<div class="card">`;
-  for(const t of used){const p=byType[t]/total*100;h+=`<div class="meter"><div class="top"><b>${esc(t)}</b><span class="v"><span style="color:var(--muted);font-size:12px">${Math.round(p)}% · </span>${money(byType[t])}</span></div><div class="bar"><i class="ink" style="width:${Math.max(p,1)}%"></i></div></div>`}
+  h+=`<div class="typelegend"><span><i class="sm"></i>Supermarket</span><span><i class="wm"></i>Wet market</span></div><div class="card">`;
+  for(const t of used){
+    const p=byType[t]/total*100, wm=byTypeWm[t]||0, sm=byType[t]-wm;
+    const wSm=sm/total*100, wWm=wm/total*100;
+    const detail=sm&&wm?`Supermarket ${money(sm)} · Wet market ${money(wm)}`:wm?"All from the wet market":"All from the supermarket";
+    h+=`<div class="meter"><div class="top"><b>${esc(t)}</b><span class="v"><span style="color:var(--muted);font-size:12px">${Math.round(p)}% · </span>${money(byType[t])}</span></div>
+    <div class="bar stack" role="img" aria-label="${esc(t)}: ${esc(detail)}">${sm?`<i class="sm" style="width:${Math.max(wSm,0.8)}%"></i>`:""}${wm?`<i class="wm" style="width:${Math.max(wWm,0.8)}%"></i>`:""}</div>
+    <div class="note">${esc(detail)}</div></div>`;
+  }
   h+=`</div>`;
   const unused=types.filter(t=>!byType[t]);
   if(unused.length)h+=`<p class="status" style="text-align:left">Nothing yet: ${unused.map(esc).join(" · ")}</p>`;
@@ -475,7 +489,7 @@ document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.
 route();
 
 /* ---------- updates and sharing ---------- */
-const APP_VERSION="202611021341";
+const APP_VERSION="202611021344";
 async function checkVersion(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
     if(j.v&&j.v!==APP_VERSION){location.replace(location.pathname+"?v="+encodeURIComponent(j.v)+location.hash)}}catch(e){}
