@@ -22,17 +22,17 @@ body{margin:0}
 :root{
   --bg:#F2F4F7; --surface:#FFFFFF; --line:#E1E6ED; --fg:#16202C; --muted:#5B6676;
   --brand:#1F3A5F; --brand-2:#2B4D78; --on-brand:#FFFFFF; --on-brand-muted:#C6D3E6;
-  --track:#DCE2EA; --good:#2C7A4B; --good-soft:#E6F2EA; --warn:#B25E09; --warn-soft:#FDF1E1; --bad:#B42318; --bad-soft:#FDECEA;
+  --track:#DCE2EA; --good:#2C7A4B; --good-soft:#E6F2EA; --warn:#B25E09; --warn-soft:#FDF1E1; --bad:#B42318; --bad-soft:#FDECEA; --sm:#2B4D78; --wm:#2C8A55;
   --font:"Manrope", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#0F151D; --surface:#18212C; --line:#273342; --fg:#E7ECF2; --muted:#9AA7B8;
   --brand:#1B2E48; --brand-2:#26405F; --on-brand:#F2F5F9; --on-brand-muted:#AFC0D6;
-  --track:#2A3646; --good:#5CC48A; --good-soft:#16301F; --warn:#F0A44B; --warn-soft:#33240F; --bad:#F2786C; --bad-soft:#3A1916; color-scheme:dark}}
+  --track:#2A3646; --good:#5CC48A; --good-soft:#16301F; --warn:#F0A44B; --warn-soft:#33240F; --bad:#F2786C; --bad-soft:#3A1916; --sm:#7FA6D6; --wm:#5CC48A; color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#0F151D; --surface:#18212C; --line:#273342; --fg:#E7ECF2; --muted:#9AA7B8;
   --brand:#1B2E48; --brand-2:#26405F; --on-brand:#F2F5F9; --on-brand-muted:#AFC0D6;
-  --track:#2A3646; --good:#5CC48A; --good-soft:#16301F; --warn:#F0A44B; --warn-soft:#33240F; --bad:#F2786C; --bad-soft:#3A1916; color-scheme:dark}
+  --track:#2A3646; --good:#5CC48A; --good-soft:#16301F; --warn:#F0A44B; --warn-soft:#33240F; --bad:#F2786C; --bad-soft:#3A1916; --sm:#7FA6D6; --wm:#5CC48A; color-scheme:dark}
 *{box-sizing:border-box}
 body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:15px;line-height:1.4;font-variant-numeric:tabular-nums}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--brand)}
@@ -146,7 +146,7 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 .split{padding:14px;display:flex;flex-direction:column;gap:12px}
 .splitbar{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--track)}
 .splitbar i{display:block;height:100%}
-.sm{background:var(--brand-2)} .wm{background:var(--good)}
+.sm,.bar.stack i.sm{background:var(--sm)} .wm,.bar.stack i.wm{background:var(--wm)}
 .splitrows{display:flex;flex-direction:column}
 .splitrow{display:flex;align-items:center;gap:10px;padding:8px 0;border-top:1px solid var(--line)}
 .splitrow:first-child{border-top:0;padding-top:0}
@@ -489,7 +489,7 @@ document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.
 route();
 
 /* ---------- updates and sharing ---------- */
-const APP_VERSION="202611021344";
+const APP_VERSION="202611021346";
 async function checkVersion(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
     if(j.v&&j.v!==APP_VERSION){location.replace(location.pathname+"?v="+encodeURIComponent(j.v)+location.hash)}}catch(e){}
