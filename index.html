@@ -141,6 +141,8 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 .ylegend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);padding-top:12px}
 .ylegend .yb{width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
 .ymax{margin:6px 0 0;font-size:11.5px;color:var(--muted)}
+.actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.act{min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font-weight:700;font-size:14px;cursor:pointer}
 @media (prefers-reduced-motion: no-preference){.bar i{transition:width .4s ease}}
 </style>
 
@@ -427,7 +429,7 @@ function render(){
     document.getElementById("monthName").textContent=String(S.year);
     document.getElementById("monthSub").textContent=S.year<Number(todayKey().slice(0,4))?"Closed year":S.year>Number(todayKey().slice(0,4))?"Budgeted":"Year to date";
     document.getElementById("heroBand").hidden=true;
-    view.innerHTML=yearHTML(yearData(S.year))+`<p class="status">${S.updated?"Last updated "+esc(new Date(S.updated).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}</p>`;
+    view.innerHTML=yearHTML(yearData(S.year))+`<p class="status">${S.updated?"Last updated "+esc(new Date(S.updated).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}</p><div class="actions"><button class="act" id="refreshBtn" type="button">Refresh</button><button class="act" id="shareBtn" type="button">Share app</button></div>`;
     return;
   }
   const range=monthsRange(); if(!S.month||!range.includes(S.month))S.month=range.includes(todayKey())?todayKey():range[range.length-1];
@@ -440,7 +442,7 @@ function render(){
   hero.innerHTML=heroHTML(r);
   document.getElementById("heroBand").hidden=S.tab!=="overview";
   view.innerHTML=(S.tab==="budget"?budgetHTML(r):S.tab==="expenses"?expensesHTML(r):S.tab==="groceries"?groceriesHTML(r):overviewHTML(r))
-    +`<p class="status">${S.updated?"Last updated "+esc(new Date(S.updated).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}<br><button class="linkbtn" id="forget" type="button">Lock this phone</button></p>`;
+    +`<p class="status">${S.updated?"Last updated "+esc(new Date(S.updated).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}</p><div class="actions"><button class="act" id="refreshBtn" type="button">Refresh</button><button class="act" id="shareBtn" type="button">Share app</button></div><p class="status"><button class="linkbtn" id="forget" type="button">Lock this phone</button></p>`;
 }
 
 function route(){const t=(location.hash||"").slice(1);S.tab=["overview","budget","expenses","groceries","year"].includes(t)?t:"overview";render();window.scrollTo(0,0)}
@@ -450,6 +452,23 @@ document.getElementById("next").addEventListener("click",()=>{if(S.tab==="year")
 document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.closest("[data-f]");if(b){S.filter=b.dataset.f;render()}});
 route();
 
+/* ---------- updates and sharing ---------- */
+const APP_VERSION="202611021333";
+async function checkVersion(){
+  try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
+    if(j.v&&j.v!==APP_VERSION){location.replace(location.pathname+"?v="+encodeURIComponent(j.v)+location.hash)}}catch(e){}
+}
+checkVersion();
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkVersion()});
+document.addEventListener("click",async ev=>{
+  if(ev.target.id==="refreshBtn"){location.replace(location.pathname+"?r="+Date.now()+location.hash);return}
+  if(ev.target.id==="shareBtn"){
+    const url=location.origin+location.pathname, btn=ev.target;
+    try{if(navigator.share){await navigator.share({title:"Household P&L",url});return}}catch(e){if(e&&e.name==="AbortError")return}
+    try{await navigator.clipboard.writeText(url);btn.textContent="Link copied"}catch(e){btn.textContent=url}
+    setTimeout(()=>{btn.textContent="Share app"},2500);
+  }
+});
 /* ---------- encrypted data file ---------- */
 const KEY="hpl-pass";
 const b64=s=>Uint8Array.from(atob(s),ch=>ch.charCodeAt(0));
