@@ -215,7 +215,7 @@ const addMonth=(k,n)=>{let [y,m]=k.split("-").map(Number);m+=n;while(m>12){m-=12
 const label=k=>{const [y,m]=k.split("-").map(Number);return MONTHS[m-1]+" "+y};
 const dayLabel=d=>{const dt=new Date(d+"T12:00:00");return dt.toLocaleDateString("en-GB",{weekday:"short",day:"numeric",month:"short"})};
 
-function lineAmount(l,k){return l.perDay!=null?c(l.perDay)*daysIn(k):c(l.amount)}
+function lineAmount(l,k){return (l.perDay!=null?c(l.perDay)*daysIn(k):c(l.amount))+c(l.adjust||0)}
 function monthsRange(){
   const start=S.config?.startMonth||"2026-11";
   let end=todayKey();
@@ -301,7 +301,7 @@ function overviewHTML(r){
     <div class="row"><span class="n">Planned this month</span><span class="v">${money(r.planned)}</span></div>
     <div class="row"><span class="n">${past?"Unspent variable budget":"Unspent so far"}${r.extras?"<small>after "+money(r.extras)+" of extras</small>":""}</span><span class="v">${r.sweep<0?"−":"+"}${money(Math.abs(r.sweep))}</span></div>
     <div class="row"><span class="n"><b>Banked before ${esc(MONTHS[Number(r.k.split("-")[1])-1])}</b></span><span class="v">${money(banked)}</span></div></div>
-    <p>${past?"This month is closed. Its leftovers are in savings.":"Every category starts fresh on the 1st. At month end, unspent groceries, restaurant, transport and home goods move to savings. Overspend and extras come out of savings."}</p></div>`;
+    <p>${past?"This month is closed. Its leftovers are in savings.":"Every category starts fresh on the 1st. At month end, unspent variable budget (groceries, restaurant, transport, home goods, pharmacy) moves to savings. Overspend and extras come out of savings."}</p></div>`;
   return h;
 }
 function budgetHTML(r){
@@ -309,7 +309,7 @@ function budgetHTML(r){
   for(const i of S.config.income)h+=`<div class="row"><span class="n">${esc(i.name)}</span><span class="v">${money(c(i.amount))}</span></div>`;
   h+=`</div>`;
   const sect=(title,list,tag)=>{const t=list.reduce((s,l)=>s+l.budget,0);let x=`<div class="label"><span>${title}</span><span>${money(t)}</span></div><div class="card rows">`;
-    for(const l of list)x+=`<div class="row"><span class="n">${esc(l.name)}${tag?`<span class="chip ${tag[0]}">${tag[1]}</span>`:""}${l.perDay!=null?`<small>${money(c(l.perDay))} a day × ${daysIn(r.k)} days</small>`:""}</span><span class="v">${money(l.budget)}</span></div>`;
+    for(const l of list)x+=`<div class="row"><span class="n">${esc(l.name)}${tag?`<span class="chip ${tag[0]}">${tag[1]}</span>`:""}${l.perDay!=null?`<small>${money(c(l.perDay))} a day × ${daysIn(r.k)} days${l.adjust?(l.adjust<0?" − ":" + ")+money(Math.abs(c(l.adjust)))+(l.adjustNote?" "+esc(l.adjustNote):""):""}</small>`:""}</span><span class="v">${money(l.budget)}</span></div>`;
     return x+`</div>`};
   h+=sect("Fixed",r.fixed,["auto","auto"]);
   h+=sect("Variable",r.variable);
@@ -489,7 +489,7 @@ document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.
 route();
 
 /* ---------- updates and sharing ---------- */
-const APP_VERSION="202611021346";
+const APP_VERSION="202611030828";
 async function checkVersion(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
     if(j.v&&j.v!==APP_VERSION){location.replace(location.pathname+"?v="+encodeURIComponent(j.v)+location.hash)}}catch(e){}
