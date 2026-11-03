@@ -161,6 +161,12 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 .bar.stack i:only-child{border-radius:4px}
 .typelegend{display:flex;gap:16px;font-size:12px;color:var(--muted);font-weight:600;padding:0 2px}
 .typelegend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.itemgroup{overflow:hidden}
+.ghead{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:10px 14px;background:color-mix(in srgb,var(--track) 45%,var(--surface));border-bottom:1px solid var(--line);font-size:14px}
+.ghead span{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.ghead span b{color:var(--fg);font-size:14px}
+.itemgroup .rows{padding:2px 14px}
+.srcdot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:0}
 @media (prefers-reduced-motion: no-preference){.bar i{transition:width .4s ease}}
 </style>
 
@@ -379,9 +385,14 @@ function groceriesHTML(r){
   const unused=types.filter(t=>!byType[t]);
   if(unused.length)h+=`<p class="status" style="text-align:left">Nothing yet: ${unused.map(esc).join(" · ")}</p>`;
   items.sort((a,b)=>c(b.amount)-c(a.amount));
-  h+=`<div class="label"><span>Items this month</span><span>${items.length}</span></div><div class="card rows">`;
-  for(const i of items)h+=`<div class="row"><span class="n">${esc(i.name)}<small>${esc(i.type)} · ${esc(i.where)}</small></span><span class="v">${money(c(i.amount))}</span></div>`;
-  h+=`</div>`;
+  h+=`<div class="label"><span>Items this month, by type</span><span>${items.length} items</span></div>`;
+  for(const t of used){
+    const its=items.filter(i=>(types.includes(i.type)?i.type:"Other")===t);
+    h+=`<div class="card itemgroup"><div class="ghead"><b>${esc(t)}</b><span>${its.length} ${its.length===1?"item":"items"} · <b>${money(byType[t])}</b></span></div><div class="rows">`;
+    for(const i of its){const wm=i.src==="wetmarket";
+      h+=`<div class="row"><span class="n">${esc(i.name)}<small><span class="srcdot ${wm?"wm":"sm"}" aria-hidden="true"></span>${wm?"Wet market":"Supermarket"} · ${esc(i.where)}</small></span><span class="v">${money(c(i.amount))}</span></div>`}
+    h+=`</div></div>`;
+  }
   return h;
 }
 
@@ -489,7 +500,7 @@ document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.
 route();
 
 /* ---------- updates and sharing ---------- */
-const APP_VERSION="202611030828";
+const APP_VERSION="202611030830";
 async function checkVersion(){
   try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
     if(j.v&&j.v!==APP_VERSION){location.replace(location.pathname+"?v="+encodeURIComponent(j.v)+location.hash)}}catch(e){}
