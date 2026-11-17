@@ -1,0 +1,41 @@
+name: Vérification
+
+# Pourquoi ce fichier existe.
+#
+# Le 10 novembre 2026, dans le dépôt carnet-recettes, le format des données
+# a changé et le script qui fabrique les fichiers générés a été modifié en
+# conséquence, mais la version corrigée est restée hors du dépôt. Pendant
+# sept jours le dépôt a contenu un produit fini correct et une recette de
+# fabrication périmée, sans que rien ne le signale, parce que personne
+# n'exécutait jamais la copie commitée. Ce workflow l'exécute à chaque push.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verifier:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      # Ce dépôt n'a pas d'étape de génération : index.html est écrit à la
+      # main et il n'y a aucun fichier fabriqué à partir d'une source. Il
+      # n'y a donc rien à refabriquer ni à comparer ici.
+
+      - name: Installer le navigateur
+        run: |
+          npm install --no-save 'playwright@^1'
+          npx playwright install --with-deps chromium
+
+      # Syntaxe de tous les .js et .json, concordance entre la version
+      # embarquée et version.json, puis chargement réel de index.html dans
+      # Chromium : toute exception JavaScript ou tout fichier du dépôt
+      # introuvable fait échouer le run.
+      - name: Syntaxe, versions, chargement et fichiers manquants
+        run: node .github/verify.mjs .
