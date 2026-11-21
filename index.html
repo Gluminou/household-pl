@@ -168,6 +168,8 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 .itemgroup .rows{padding:2px 14px}
 .srcdot{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:6px;vertical-align:0}
 @media (prefers-reduced-motion: no-preference){.bar i{transition:width .4s ease}}
+#app-updates{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+:root{--au-bar-bottom:72px;--au-accent:var(--accent)}
 </style>
 
 <section class="gutter" id="lock" hidden>
@@ -500,13 +502,11 @@ document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.
 route();
 
 /* ---------- updates and sharing ---------- */
-const APP_VERSION="202611030830";
-async function checkVersion(){
-  try{const r=await fetch("version.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)return;const j=await r.json();
-    if(j.v&&j.v!==APP_VERSION){location.replace(location.pathname+"?v="+encodeURIComponent(j.v)+location.hash)}}catch(e){}
-}
-checkVersion();
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible")checkVersion()});
+const APP_RELEASE="1.0.0";
+const APP_DATE="2026-11-21";
+const APP_VERSION="202611210445";
+Object.assign(window,{APP_RELEASE,APP_DATE,APP_VERSION}); // read by updates.js
+// Update checks, version number and What's new: updates.js
 document.addEventListener("click",async ev=>{
   if(ev.target.id==="refreshBtn"){location.replace(location.pathname+"?r="+Date.now()+location.hash);return}
   if(ev.target.id==="shareBtn"){
@@ -546,5 +546,7 @@ document.addEventListener("visibilitychange",()=>{if(document.visibilityState===
 })();
 </script>
 
+<div id="app-updates"></div>
+<script src="updates.js"></script>
 </body>
 </html>
