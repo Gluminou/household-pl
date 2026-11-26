@@ -1,8 +1,9 @@
 {
-  "v": "202611210445",
-  "version": "1.0.0",
-  "date": "2026-11-21",
+  "v": "202611260256",
+  "version": "1.1.0",
+  "date": "2026-11-26",
   "notes": [
-    "Check for update button, version number with its date, and this What's new list."
+    "The budget now opens with your own GitHub key, set once per phone in Sync between devices at the bottom; the family passphrase is gone.",
+    "The budget data moved to a private repo that only the keys you choose can open."
   ]
 }

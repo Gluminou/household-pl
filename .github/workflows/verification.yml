@@ -39,3 +39,7 @@ jobs:
       # introuvable fait échouer le run.
       - name: Syntaxe, versions, chargement et fichiers manquants
         run: node .github/verify.mjs .
+      # Même système que toutes les apps de Gluminou : fichiers communs identiques à leurs
+      # originaux dans Gluminou/app-common, et installation sur l'écran d'accueil complète.
+      - name: Système commun des apps
+        run: node .github/check-common.mjs .

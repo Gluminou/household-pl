@@ -114,15 +114,6 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 :root[data-theme="dark"] nav.tabs a[aria-current="page"]{border-top-color:var(--good)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) nav.tabs a[aria-current="page"]{border-top-color:var(--good)}}
 .status{font-size:12px;color:var(--muted);text-align:center;padding-top:4px}
-.lock{max-width:420px;margin:12vh auto 0;display:flex;flex-direction:column;gap:14px}
-.lock h1{margin:0;font-size:24px;font-weight:800;text-wrap:balance}
-.lock p{margin:0;color:var(--muted)}
-.lock label{font-size:13px;font-weight:700;color:var(--muted)}
-.lock input{width:100%;min-height:48px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:var(--surface);color:var(--fg);font:inherit;font-size:16px}
-.lock .cb{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--fg);font-weight:600}
-.lock .cb input{width:20px;min-height:20px}
-.lock button{min-height:48px;border:0;border-radius:10px;background:var(--brand-2);color:var(--on-brand);font-weight:700;font-size:16px;cursor:pointer}
-.lock .err{color:var(--bad);font-size:14px;min-height:1.2em}
 .linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:12px;cursor:pointer;padding:8px}
 .ytiles{margin-top:2px}
 .ytiles .tile{background:var(--brand)}
@@ -172,17 +163,7 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 :root{--au-bar-bottom:72px;--au-accent:var(--accent)}
 </style>
 
-<section class="gutter" id="lock" hidden>
-  <form class="lock" id="lockForm" autocomplete="off">
-    <h1>Household P&amp;L</h1>
-    <p>Enter the family passphrase to open the budget.</p>
-    <div style="display:flex;flex-direction:column;gap:6px"><label for="pass">Passphrase</label><input id="pass" type="password" autocomplete="current-password" required></div>
-    <label class="cb" for="remember"><input id="remember" type="checkbox" checked> Remember on this phone</label>
-    <button type="submit" id="unlockBtn">Open</button>
-    <div class="err" id="lockErr" role="alert"></div>
-  </form>
-</section>
-<div id="app" hidden>
+<div id="app">
 <header class="head">
   <div class="wrap gutter monthbar">
     <button id="prev" aria-label="Previous month">‹</button>
@@ -468,7 +449,7 @@ function render(){
   document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===S.tab?"page":"false"));
   if(!S.config){
     hero.innerHTML="";
-    view.innerHTML=S.live?`<div class="card empty"><b>No budget set up yet</b>The budget file is empty.</div>`:`<div class="card empty"><b>Loading your budget</b>Expenses appear here as receipts are logged.</div>`;
+    view.innerHTML=S.live?`<div class="card empty"><b>No budget set up yet</b>The budget file is empty.</div>`:S.sync&&S.sync.connected?`<div class="card empty"><b>Loading your budget</b>${S.sync.message?esc(S.sync.message):"Expenses appear here as receipts are logged."}</div>`:`<div class="card empty"><b>Connect this phone</b>The budget opens once this phone is connected with its GitHub key, in Sync between devices at the bottom of the page.</div>`;
     return;
   }
   if(S.tab==="year"){
@@ -502,9 +483,9 @@ document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.
 route();
 
 /* ---------- updates and sharing ---------- */
-const APP_RELEASE="1.0.0";
-const APP_DATE="2026-11-21";
-const APP_VERSION="202611210445";
+const APP_RELEASE="1.1.0";
+const APP_DATE="2026-11-26";
+const APP_VERSION="202611260256";
 Object.assign(window,{APP_RELEASE,APP_DATE,APP_VERSION}); // read by updates.js
 // Update checks, version number and What's new: updates.js
 document.addEventListener("click",async ev=>{
@@ -516,37 +497,25 @@ document.addEventListener("click",async ev=>{
     setTimeout(()=>{btn.textContent="Share app"},2500);
   }
 });
-/* ---------- encrypted data file ---------- */
-const KEY="hpl-pass";
-const b64=s=>Uint8Array.from(atob(s),ch=>ch.charCodeAt(0));
-async function decrypt(enc,pass){
-  const base=await crypto.subtle.importKey("raw",new TextEncoder().encode(pass),"PBKDF2",false,["deriveKey"]);
-  const key=await crypto.subtle.deriveKey({name:"PBKDF2",salt:b64(enc.salt),iterations:enc.iter,hash:"SHA-256"},base,{name:"AES-GCM",length:256},false,["decrypt"]);
-  const pt=await crypto.subtle.decrypt({name:"AES-GCM",iv:b64(enc.iv)},key,b64(enc.ct));
-  return JSON.parse(new TextDecoder().decode(pt));
+/* ---------- data ---------- */
+// The budget lives in data.json in the private repo Gluminou/household-pl-data. Claude writes it when
+// receipts are logged (tools/data.mjs); sync.js, shared by all Gluminou apps, brings it to each connected
+// phone under hpl-data. The app only reads it. Access: the GitHub keys that can open that repo.
+window.APP_SYNC={app:"household-pl",keys:["hpl-data"]};
+try{localStorage.removeItem("hpl-pass")}catch(e){} // the old family passphrase is no longer used
+function loadData(){
+  let d=null; try{d=JSON.parse(localStorage.getItem("hpl-data")||"null")}catch(e){}
+  if(d&&d.config){S.config=d.config;S.entries=d.entries||[];S.updated=d.updated;S.live=true}
+  render();
 }
-const store={get(){try{return localStorage.getItem(KEY)}catch(e){return null}},set(v){try{localStorage.setItem(KEY,v)}catch(e){}},del(){try{localStorage.removeItem(KEY)}catch(e){}}};
-let pass=null;
-async function fetchEnc(){const r=await fetch("data.enc.json?t="+Date.now(),{cache:"no-store"});if(!r.ok)throw new Error("fetch");return r.json()}
-function showLock(msg){document.getElementById("app").hidden=true;document.getElementById("lock").hidden=false;document.getElementById("lockErr").textContent=msg||"";document.getElementById("pass").value="";}
-function showApp(){document.getElementById("lock").hidden=true;document.getElementById("app").hidden=false;}
-async function load(p){
-  const data=await decrypt(await fetchEnc(),p);
-  S.config=data.config;S.entries=data.entries||[];S.updated=data.updated;S.live=true;pass=p;showApp();render();
-}
-document.getElementById("lockForm").addEventListener("submit",async ev=>{
-  ev.preventDefault();const p=document.getElementById("pass").value;const btn=document.getElementById("unlockBtn");btn.disabled=true;
-  try{await load(p);if(document.getElementById("remember").checked)store.set(p)}
-  catch(e){document.getElementById("lockErr").textContent=e.message==="fetch"?"Couldn't reach the budget file. Check your connection and try again.":"That passphrase doesn't match. Try again."}
-  btn.disabled=false;
-});
-document.addEventListener("click",ev=>{if(ev.target.id==="forget"){store.del();pass=null;showLock()}});
-document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="visible"&&pass)load(pass).catch(()=>{})});
-(async()=>{const p=store.get();if(!p){showLock();return}try{await load(p)}catch(e){showLock(e.message==="fetch"?"Couldn't reach the budget file. Check your connection.":"")}})();
+window.addEventListener("storage",e=>{if(e.key==="hpl-data")loadData()});
+window.addEventListener("appsyncstatus",e=>{S.sync=e.detail;if(!S.config)render()});
+loadData();
 })();
 </script>
 
 <div id="app-updates"></div>
+<script src="sync.js"></script>
 <script src="updates.js"></script>
 </body>
 </html>
