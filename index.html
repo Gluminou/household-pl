@@ -108,8 +108,8 @@ main{display:flex;flex-direction:column;gap:12px;padding-block:14px calc(84px + 
 .empty b{display:block;color:var(--fg);margin-bottom:4px}
 
 nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px)}
-nav.tabs .wrap{display:grid;grid-template-columns:repeat(5,minmax(0,1fr))}
-nav.tabs a{min-height:58px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--muted);font-size:12.5px;font-weight:600;border-top:3px solid transparent}
+nav.tabs .wrap{display:grid;grid-template-columns:repeat(6,minmax(0,1fr))}
+nav.tabs a{min-height:58px;display:flex;align-items:center;justify-content:center;text-decoration:none;color:var(--muted);font-size:12px;font-weight:600;border-top:3px solid transparent;padding:0 2px;text-align:center}
 nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 :root[data-theme="dark"] nav.tabs a[aria-current="page"]{border-top-color:var(--good)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) nav.tabs a[aria-current="page"]{border-top-color:var(--good)}}
@@ -161,6 +161,48 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
 @media (prefers-reduced-motion: no-preference){.bar i{transition:width .4s ease}}
 #app-updates{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 :root{--au-bar-bottom:72px;--au-accent:var(--accent)}
+/* Helper cash tab */
+.cashhero .big strong{font-size:40px}
+.cashhero .big strong.low{color:#FFC56B}
+.lowpill{display:inline-block;margin-top:8px;background:var(--warn-soft);color:var(--warn);font-weight:800;font-size:12.5px;padding:4px 10px;border-radius:999px}
+.cashbtns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:16px}
+.cashbtns button{min-height:48px;border-radius:12px;font-weight:800;font-size:15px;cursor:pointer;font-family:inherit}
+.cashbtns button:disabled{opacity:.45;cursor:default}
+.cb-add{background:#FFFFFF;color:#1F3A5F;border:0}
+.cb-ded{background:transparent;color:var(--on-brand);border:1.5px solid var(--on-brand-muted)}
+.mv{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;padding:11px 14px}
+.mv+.mv{border-top:1px solid var(--line)}
+.mv .n{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mv .n b{font-size:14.5px}
+.mv .n small{font-size:12.5px;color:var(--muted);overflow-wrap:anywhere}
+.mv .v{text-align:right;white-space:nowrap;display:flex;flex-direction:column;gap:2px;align-items:flex-end}
+.mv .v b{font-size:15px}
+.mv .v small{font-size:11.5px;color:var(--muted)}
+.mv .v b.plus{color:var(--good)}
+.mv .v b.neg{color:var(--bad)}
+.tag{display:inline-block;font-size:10.5px;font-weight:700;padding:1px 7px;border-radius:999px;margin-left:6px;vertical-align:1px}
+.tag.auto{background:var(--good-soft);color:var(--good)} .tag.man{background:var(--warn-soft);color:var(--warn)} .tag.top{background:var(--track);color:var(--fg)}
+.rm{background:none;border:0;color:var(--muted);font:inherit;font-size:11.5px;text-decoration:underline;cursor:pointer;padding:2px 0}
+.rm.yes{color:var(--bad);font-weight:700}
+.sheetwrap{position:fixed;inset:0;z-index:30;background:rgba(10,18,28,.45);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);color:var(--fg);width:100%;max-width:520px;border-radius:18px 18px 0 0;padding:18px max(20px,env(safe-area-inset-right,0px)) calc(24px + env(safe-area-inset-bottom,0px)) max(20px,env(safe-area-inset-left,0px));display:flex;flex-direction:column;gap:14px;box-sizing:border-box;max-height:92vh;overflow:auto}
+.sheet h2{margin:0;font-size:19px;display:flex;justify-content:space-between;align-items:center}
+.sheet h2 button{background:none;border:0;color:var(--muted);font:inherit;font-size:14px;font-weight:600;cursor:pointer;min-height:40px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--track);border-radius:10px;padding:3px;gap:3px}
+.seg button{border:0;background:transparent;padding:10px;border-radius:8px;font:inherit;font-weight:700;font-size:14px;color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--fg);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.fld{display:flex;flex-direction:column;gap:6px}
+.fld label{font-size:12.5px;font-weight:700;color:var(--muted)}
+.fld input{min-height:48px;border:1px solid var(--line);border-radius:10px;padding:0 14px;font:inherit;font-size:16px;background:var(--bg);color:var(--fg);box-sizing:border-box;width:100%}
+.fld input.big{font-size:26px;font-weight:800}
+.chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.chips button{border:1px solid var(--line);background:var(--surface);color:var(--fg);border-radius:999px;padding:0 14px;min-height:38px;font:inherit;font-size:13px;font-weight:600;cursor:pointer}
+.chips button[aria-pressed="true"]{background:var(--brand-2);color:#fff;border-color:var(--brand-2)}
+.chips input{min-height:38px;width:auto;flex:1 1 140px}
+.after{font-size:13px;color:var(--muted);text-align:center}
+.formerr{font-size:13px;color:var(--bad);text-align:center;min-height:1em}
+.save{min-height:50px;border:0;border-radius:12px;background:var(--brand-2);color:#fff;font:inherit;font-weight:800;font-size:16px;cursor:pointer}
+.save.ded{background:var(--bad)}
 </style>
 
 <div id="app">
@@ -182,8 +224,25 @@ nav.tabs a[aria-current="page"]{color:var(--fg);border-top-color:var(--brand-2)}
     <a href="#expenses" data-tab="expenses">Expenses</a>
     <a href="#groceries" data-tab="groceries">Groceries</a>
     <a href="#year" data-tab="year">Year</a>
+    <a href="#cash" data-tab="cash">Cash</a>
   </div>
 </nav>
+<div class="sheetwrap" id="cashSheet" hidden>
+  <form class="sheet" id="cashForm" autocomplete="off" aria-labelledby="cashTitle">
+    <h2><span id="cashTitle">Change the cash</span><button type="button" id="cashClose">Cancel</button></h2>
+    <div class="seg" role="group" aria-label="Add or deduct">
+      <button type="button" data-kind="add" aria-pressed="true">+ Add cash</button>
+      <button type="button" data-kind="deduct" aria-pressed="false">− Deduct cash</button>
+    </div>
+    <div class="fld"><label for="cashAmt">Amount, HK$</label><input id="cashAmt" class="big" inputmode="decimal" placeholder="0" required></div>
+    <div class="fld"><label for="cashNote" id="cashNoteLbl">Note (optional)</label><input id="cashNote" maxlength="80" placeholder="e.g. Weekly cash"></div>
+    <div class="fld"><label for="cashDate">Date</label>
+      <div class="chips"><button type="button" data-day="0" aria-pressed="true">Today</button><button type="button" data-day="1" aria-pressed="false">Yesterday</button><input id="cashDate" type="date" aria-label="Pick a date"></div></div>
+    <div class="after" id="cashAfter"></div>
+    <div class="formerr" id="cashErr" role="alert"></div>
+    <button class="save" id="cashSave" type="submit">Save</button>
+  </form>
+</div>
 </div>
 
 <script>
@@ -444,6 +503,107 @@ function yearHTML(d){
   return h;
 }
 
+/* ---------- helper cash ----------
+   Not monthly: one running balance. Cash given and manual deductions are stored on the
+   phone under "hpl-cash" and synced (sync.js merges the "moves" list item by item, so two
+   phones adding at once both count). Wet market purchases come off by themselves: every
+   groceries entry from the wet market dated on or after "from" is a deduction. */
+const CASH_KEY="hpl-cash", CASH_DEFAULT={v:1,from:"2026-11-26",alert:200,moves:[]};
+function readCash(){let d=null;try{d=JSON.parse(localStorage.getItem(CASH_KEY)||"null")}catch(e){}
+  d=Object.assign({},CASH_DEFAULT,d||{}); if(!Array.isArray(d.moves))d.moves=[]; return d}
+function writeCash(d){try{localStorage.setItem(CASH_KEY,JSON.stringify(d));return true}catch(e){return false}}
+const isoDay=dt=>dt.getFullYear()+"-"+String(dt.getMonth()+1).padStart(2,"0")+"-"+String(dt.getDate()).padStart(2,"0");
+function cashState(){
+  const cash=readCash();
+  const rows=[];
+  for(const m of cash.moves){ if(!m||!m.id||!m.date)continue;
+    rows.push({id:m.id,date:m.date,t:m.t||0,kind:m.kind==="deduct"?"deduct":"add",amt:(m.kind==="deduct"?-1:1)*Math.abs(c(m.amount)),note:m.note||""}); }
+  const wm={};
+  for(const e of S.entries){ if(e.category!=="groceries"||e.source!=="wetmarket"||!e.date||e.date<cash.from)continue;
+    (wm[e.date]=wm[e.date]||[]).push(e); }
+  for(const d in wm){ const es=wm[d]; const names=[...new Set(es.flatMap(e=>(e.items&&e.items.length?e.items.map(i=>i.name):[e.merchant])))];
+    rows.push({id:"wm-"+d,date:d,t:-1,kind:"market",amt:-es.reduce((s,e)=>s+c(e.amount),0),note:(es.length>1?es.length+" notes: ":"")+names.join(", ").toLowerCase().replace(/^./,x=>x.toUpperCase())}); }
+  // oldest first to run the balance, wet market after the day's top-ups
+  rows.sort((a,b)=>a.date.localeCompare(b.date)||(a.kind==="add"?0:1)-(b.kind==="add"?0:1)||a.t-b.t);
+  let bal=0; for(const r of rows){bal+=r.amt;r.after=bal}
+  const lastAdd=[...rows].reverse().find(r=>r.kind==="add");
+  return {cash,rows,bal,lastAdd,alert:c(cash.alert)};
+}
+const canWrite=()=>!(S.sync&&S.sync.state==="view");
+function cashHeroHTML(st){
+  const low=st.bal<st.alert;
+  const sub=st.lastAdd?`Last given: HK$ ${money(st.lastAdd.amt)} on ${esc(dayLabel(st.lastAdd.date))}`:"No cash given yet";
+  return `<div class="big"><small>Cash with the helper now</small><strong class="${low?"low":""}">${st.bal<0?"−":""}HK$ ${money(Math.abs(st.bal))}</strong><small>${sub}</small>
+  ${low?`<span class="lowpill">Below HK$ ${money(st.alert)}: time to top up</span>`:""}</div>
+  <div class="cashbtns"><button class="cb-add" type="button" data-cash="add"${canWrite()?"":" disabled"}>+ Add cash</button><button class="cb-ded" type="button" data-cash="deduct"${canWrite()?"":" disabled"}>− Deduct cash</button></div>`;
+}
+function cashHTML(st){
+  let h="";
+  if(!canWrite())h+=`<div class="card empty"><b>View only on this phone</b>Its GitHub key can read the budget but not change it, so cash can't be added here.</div>`;
+  if(!st.rows.length)h+=`<div class="card empty"><b>Nothing yet</b>Tap Add cash when you give the helper money. Wet market notes logged from ${esc(dayLabel(st.cash.from))} come off the balance by themselves.</div>`;
+  const byDay={}; for(const r of st.rows)(byDay[r.date]=byDay[r.date]||[]).push(r);
+  for(const d of Object.keys(byDay).sort().reverse()){
+    const rs=byDay[d].slice().reverse(); const net=rs.reduce((s,r)=>s+r.amt,0);
+    h+=`<div class="label"><span>${esc(dayLabel(d))}</span><span>${net>0?"+":net<0?"−":""}${money(Math.abs(net))}</span></div><div class="card">`;
+    for(const r of rs){
+      const tag=r.kind==="market"?`<span class="tag auto">from receipts</span>`:r.kind==="add"?`<span class="tag top">top-up</span>`:`<span class="tag man">manual</span>`;
+      const title=r.kind==="market"?"Wet market":r.kind==="add"?"Cash given":esc(r.note||"Deducted by hand");
+      const sub=r.kind==="market"?esc(r.note):r.kind==="add"?(r.note?esc(r.note):""):"Deducted by hand";
+      const rm=r.kind!=="market"&&canWrite()?(S.cashRm===r.id?`<span><button class="rm yes" type="button" data-rmyes="${esc(r.id)}">Remove</button> · <button class="rm" type="button" data-rmno>Keep</button></span>`:`<button class="rm" type="button" data-rm="${esc(r.id)}">Remove</button>`):"";
+      h+=`<div class="mv"><div class="n"><b>${title}${tag}</b>${sub?`<small>${sub}</small>`:""}</div><div class="v"><b class="${r.amt>0?"plus":""}">${r.amt>0?"+":"−"}${money(Math.abs(r.amt))}</b><small class="${r.after<0?"":""}">left ${r.after<0?"−":""}${money(Math.abs(r.after))}</small>${rm}</div></div>`;
+    }
+    h+=`</div>`;
+  }
+  h+=`<p class="status" style="text-align:left">Wet market notes come off the balance by themselves when Claude logs them. Supermarket, restaurant and other card spending never touches it. Below HK$ ${money(st.alert)} the balance turns orange and an email alert is sent.</p>`;
+  return h;
+}
+let cashKind="add";
+function cashOpen(kind){
+  if(!canWrite())return;
+  cashKind=kind; const f=document.getElementById("cashForm");
+  f.reset(); document.getElementById("cashErr").textContent="";
+  setDay(0); setKind(kind);
+  document.getElementById("cashSheet").hidden=false;
+  setTimeout(()=>document.getElementById("cashAmt").focus(),50);
+}
+function cashClose(){document.getElementById("cashSheet").hidden=true}
+function setKind(kind){cashKind=kind;
+  document.querySelectorAll("#cashForm .seg button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.kind===kind)));
+  document.getElementById("cashNoteLbl").textContent=kind==="add"?"Note (optional)":"What was it for?";
+  document.getElementById("cashNote").placeholder=kind==="add"?"e.g. Weekly cash":"e.g. Taxi for errand";
+  document.getElementById("cashSave").className="save"+(kind==="deduct"?" ded":"");
+  cashPreview();}
+function setDay(n){const dt=new Date();dt.setDate(dt.getDate()-n);document.getElementById("cashDate").value=isoDay(dt);markDay()}
+function markDay(){const v=document.getElementById("cashDate").value;const t=isoDay(new Date());const y=new Date();y.setDate(y.getDate()-1);
+  document.querySelectorAll("#cashForm .chips button").forEach(b=>b.setAttribute("aria-pressed",String((b.dataset.day==="0"&&v===t)||(b.dataset.day==="1"&&v===isoDay(y)))))}
+function parseAmt(){const v=document.getElementById("cashAmt").value.replace(/[, HK$]/gi,"");if(!/^\d+(\.\d{1,2})?$/.test(v))return null;const n=Number(v);return n>0&&n<=100000?n:null}
+function cashPreview(){const a=parseAmt();const st=cashState();const el=document.getElementById("cashAfter");
+  if(a==null){el.textContent="";return}
+  const nb=st.bal+(cashKind==="add"?1:-1)*c(a); el.textContent=`After saving: ${nb<0?"−":""}HK$ ${money(Math.abs(nb))} with the helper`;}
+document.getElementById("cashForm").addEventListener("submit",ev=>{
+  ev.preventDefault(); const err=document.getElementById("cashErr");
+  const a=parseAmt(); if(a==null){err.textContent="Enter an amount in HK$, for example 500.";return}
+  const note=document.getElementById("cashNote").value.trim();
+  if(cashKind==="deduct"&&!note){err.textContent="Say what the cash was used for.";document.getElementById("cashNote").focus();return}
+  const date=document.getElementById("cashDate").value; if(!/^\d{4}-\d{2}-\d{2}$/.test(date)){err.textContent="Pick a date.";return}
+  const d=readCash(); d.moves=d.moves.concat([{id:"m"+Date.now().toString(36)+Math.random().toString(36).slice(2,6),date,amount:a,kind:cashKind,note,t:Date.now()}]);
+  if(!writeCash(d)){err.textContent="This phone couldn't save it. Try again.";return}
+  cashClose(); render();
+});
+document.getElementById("cashForm").addEventListener("input",ev=>{if(ev.target.id==="cashDate")markDay();cashPreview()});
+document.getElementById("cashForm").addEventListener("click",ev=>{const k=ev.target.closest("[data-kind]");if(k){setKind(k.dataset.kind);return}
+  const dy=ev.target.closest("[data-day]");if(dy){setDay(Number(dy.dataset.day))}});
+document.getElementById("cashClose").addEventListener("click",cashClose);
+document.getElementById("cashSheet").addEventListener("click",ev=>{if(ev.target.id==="cashSheet")cashClose()});
+document.addEventListener("keydown",ev=>{if(ev.key==="Escape"&&!document.getElementById("cashSheet").hidden)cashClose()});
+document.getElementById("app").addEventListener("click",ev=>{
+  const b=ev.target.closest("[data-cash]"); if(b){cashOpen(b.dataset.cash);return}
+  const rm=ev.target.closest("[data-rm]"); if(rm){S.cashRm=rm.dataset.rm;render();return}
+  if(ev.target.closest("[data-rmno]")){S.cashRm=null;render();return}
+  const yes=ev.target.closest("[data-rmyes]"); if(yes){const d=readCash();d.moves=d.moves.filter(m=>m.id!==yes.dataset.rmyes);writeCash(d);S.cashRm=null;render()}
+});
+window.addEventListener("storage",e=>{if(e.key===CASH_KEY&&S.tab==="cash")render()});
+
 function render(){
   const view=document.getElementById("view"), hero=document.getElementById("hero");
   document.querySelectorAll("nav.tabs a").forEach(a=>a.setAttribute("aria-current",a.dataset.tab===S.tab?"page":"false"));
@@ -452,6 +612,17 @@ function render(){
     view.innerHTML=S.live?`<div class="card empty"><b>No budget set up yet</b>The budget file is empty.</div>`:S.sync&&S.sync.connected?`<div class="card empty"><b>Loading your budget</b>${S.sync.message?esc(S.sync.message):"Expenses appear here as receipts are logged."}</div>`:`<div class="card empty"><b>Connect this phone</b>The budget opens once this phone is connected with its GitHub key, in Sync between devices at the bottom of the page.</div>`;
     return;
   }
+  if(S.tab==="cash"){
+    const st=cashState();
+    document.getElementById("prev").style.visibility="hidden"; document.getElementById("next").style.visibility="hidden";
+    document.getElementById("monthName").textContent="Helper cash";
+    document.getElementById("monthSub").textContent="Running balance, not monthly";
+    document.getElementById("heroBand").hidden=false; document.getElementById("heroBand").classList.add("cashhero");
+    hero.innerHTML=cashHeroHTML(st);
+    view.innerHTML=cashHTML(st)+`<div class="actions"><button class="act" id="refreshBtn" type="button">Refresh</button><button class="act" id="shareBtn" type="button">Share app</button></div>`;
+    return;
+  }
+  document.getElementById("prev").style.visibility=""; document.getElementById("next").style.visibility=""; document.getElementById("heroBand").classList.remove("cashhero");
   if(S.tab==="year"){
     const ys=yearsRange(); if(!S.year||!ys.includes(S.year))S.year=Number(todayKey().slice(0,4)); if(!ys.includes(S.year))S.year=ys[0];
     const yi=ys.indexOf(S.year);
@@ -475,7 +646,7 @@ function render(){
     +`<p class="status">${S.updated?"Last updated "+esc(new Date(S.updated).toLocaleString("en-GB",{day:"numeric",month:"short",hour:"2-digit",minute:"2-digit"})):""}</p><div class="actions"><button class="act" id="refreshBtn" type="button">Refresh</button><button class="act" id="shareBtn" type="button">Share app</button></div><p class="status"><button class="linkbtn" id="forget" type="button">Lock this phone</button></p>`;
 }
 
-function route(){const t=(location.hash||"").slice(1);S.tab=["overview","budget","expenses","groceries","year"].includes(t)?t:"overview";render();window.scrollTo(0,0)}
+function route(){const t=(location.hash||"").slice(1);S.tab=["overview","budget","expenses","groceries","year","cash"].includes(t)?t:"overview";render();window.scrollTo(0,0)}
 window.addEventListener("hashchange",route);
 document.getElementById("prev").addEventListener("click",()=>{if(S.tab==="year"){S.year--;render();return}const r=monthsRange();const i=r.indexOf(S.month);if(i>0){S.month=r[i-1];render()}});
 document.getElementById("next").addEventListener("click",()=>{if(S.tab==="year"){S.year++;render();return}const r=monthsRange();const i=r.indexOf(S.month);if(i<r.length-1){S.month=r[i+1];render()}});
@@ -483,9 +654,9 @@ document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.
 route();
 
 /* ---------- updates and sharing ---------- */
-const APP_RELEASE="1.2.0";
+const APP_RELEASE="1.3.0";
 const APP_DATE="2026-11-26";
-const APP_VERSION="202611260452";
+const APP_VERSION="202611260514";
 Object.assign(window,{APP_RELEASE,APP_DATE,APP_VERSION}); // read by updates.js
 // Update checks, version number and What's new: updates.js
 document.addEventListener("click",async ev=>{
@@ -500,8 +671,8 @@ document.addEventListener("click",async ev=>{
 /* ---------- data ---------- */
 // The budget lives in data.json in the private repo Gluminou/household-pl-data. Claude writes it when
 // receipts are logged (tools/data.mjs); sync.js, shared by all Gluminou apps, brings it to each connected
-// phone under hpl-data. The app only reads it. Access: the GitHub keys that can open that repo.
-window.APP_SYNC={app:"household-pl",keys:[],content:"hpl-data"};
+// phone under hpl-data. The app only reads the budget; it writes only the helper cash (hpl-cash). Access: the GitHub keys that can open that repo.
+window.APP_SYNC={app:"household-pl",keys:["hpl-cash"],content:"hpl-data"}; // hpl-cash: helper cash, written on the phone
 try{localStorage.removeItem("hpl-pass")}catch(e){} // the old family passphrase is no longer used
 function loadData(){
   let d=null; try{d=JSON.parse(localStorage.getItem("hpl-data")||"null")}catch(e){}

@@ -1,5 +1,13 @@
 [
   {
+    "version": "1.3.0",
+    "date": "2026-11-26",
+    "notes": [
+      "New Cash tab: how much cash the helper has, with Add cash and Deduct cash. Wet market notes come off it by themselves.",
+      "An email alert is sent when her cash drops below HK$200."
+    ]
+  },
+  {
     "version": "1.2.0",
     "date": "2026-11-26",
     "notes": [
