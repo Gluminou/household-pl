@@ -42,11 +42,12 @@ const skip = existsSync(cfgPath) ? (JSON.parse(readFileSync(cfgPath, 'utf8')).sk
 const at = f => join(root, f);
 const page = existsSync(at('index.html')) ? readFileSync(at('index.html'), 'utf8') : '';
 const usesSync = /\bAPP_SYNC\b/.test(page);
+const hasContent = /\bAPP_SYNC\b[\s\S]{0,400}\bcontent\s*:/.test(page); // its content lives in the private repo
 
 for (const f of spec.files) {
   const local = f.place === 'app' ? at(f.path) : f.path;
   if (skip[f.path]) { console.log(`skipped  ${f.path} (${skip[f.path]})`); continue; }
-  const required = f.required === true || (f.required === 'APP_SYNC' && usesSync);
+  const required = f.required === true || (f.required === 'APP_SYNC' && usesSync) || (f.required === 'content' && hasContent);
   if (!existsSync(local)) {
     if (required) problems.push(`${local} is missing: copy ${f.master} from Gluminou/app-common`);
     continue;
@@ -58,6 +59,8 @@ for (const f of spec.files) {
 }
 
 if (!/src=["']updates\.js["']/.test(page)) problems.push('index.html does not load updates.js');
+if (!usesSync) problems.push('index.html declares no APP_SYNC: every app is locked behind a key and syncs through its private repo');
+if (/\block\s*:\s*false\b/.test(page)) problems.push('APP_SYNC has lock: false: every app stays locked behind a key');
 if (usesSync && !/src=["']sync\.js["']/.test(page)) problems.push('index.html declares APP_SYNC but does not load sync.js');
 for (const f of spec.present || []) {
   if (skip[f]) continue;
@@ -71,4 +74,4 @@ if (problems.length) {
   problems.forEach(p => console.error('  - ' + p));
   process.exit(1);
 }
-console.log(`\nFollows the common system${usesSync ? ', with sync' : ', no data kept on the device'}.`);
+console.log('\nFollows the common system: locked behind a key, synced through its private repo.');

@@ -1,5 +1,12 @@
 [
   {
+    "version": "1.2.0",
+    "date": "2026-11-26",
+    "notes": [
+      "The key is now asked for on the first screen, with the box to paste it right there."
+    ]
+  },
+  {
     "version": "1.1.0",
     "date": "2026-11-26",
     "notes": [

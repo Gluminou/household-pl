@@ -483,9 +483,9 @@ document.getElementById("view").addEventListener("click",ev=>{const b=ev.target.
 route();
 
 /* ---------- updates and sharing ---------- */
-const APP_RELEASE="1.1.0";
+const APP_RELEASE="1.2.0";
 const APP_DATE="2026-11-26";
-const APP_VERSION="202611260256";
+const APP_VERSION="202611260452";
 Object.assign(window,{APP_RELEASE,APP_DATE,APP_VERSION}); // read by updates.js
 // Update checks, version number and What's new: updates.js
 document.addEventListener("click",async ev=>{
@@ -501,7 +501,7 @@ document.addEventListener("click",async ev=>{
 // The budget lives in data.json in the private repo Gluminou/household-pl-data. Claude writes it when
 // receipts are logged (tools/data.mjs); sync.js, shared by all Gluminou apps, brings it to each connected
 // phone under hpl-data. The app only reads it. Access: the GitHub keys that can open that repo.
-window.APP_SYNC={app:"household-pl",keys:["hpl-data"]};
+window.APP_SYNC={app:"household-pl",keys:[],content:"hpl-data"};
 try{localStorage.removeItem("hpl-pass")}catch(e){} // the old family passphrase is no longer used
 function loadData(){
   let d=null; try{d=JSON.parse(localStorage.getItem("hpl-data")||"null")}catch(e){}

@@ -7,7 +7,9 @@
        keys: ["jobtracker.v1"],           // localStorage keys to sync
        prefixes: [],                      // optional: every key starting with one of these
        repo: "Gluminou/job-tracker-data", // optional, this is the default: Gluminou/<app>-data
-       reload: false                      // optional: reload the page when data arrives
+       reload: false,                     // optional: reload the page when data arrives
+       content: "carnet-content",         // optional: key holding the app's content, written by Claude
+       lock: true                         // default: without a key the app shows only the key screen
      };
    Optional: <div id="app-sync"></div> where the section goes; without it the
    section goes just before #app-updates, or at the end of the page.
@@ -27,6 +29,13 @@
    {connected, state: idle|busy|ok|err|view, pending, message} for apps that
    show it themselves; window.appSync.status() returns the same.
 
+   Locked apps (the default): until the device is connected with a key that
+   opens the repo, a full-screen card asks for the key; nothing else is usable.
+   With "content", the app's content itself (recipes, schedule, floor plan...)
+   lives only in the private repo, under that key, and the card stays until it
+   has arrived. When the content changes, the page reloads to use it.
+   Disconnecting a locked app removes its content from the device.
+
    Merging: the module keeps the last version both sides agreed on and merges
    three ways, so a change made on one device is never lost because of an
    unrelated change on another. Inside JSON values, objects are merged field by
@@ -37,7 +46,9 @@
   var C = typeof APP_SYNC !== 'undefined' ? APP_SYNC : window.APP_SYNC;
   if (!C || !C.app) return;
   var APP = String(C.app), REPO = C.repo || 'Gluminou/' + APP + '-data', FILE = 'data.json';
-  var KEYS = C.keys || [], PREFIXES = C.prefixes || [];
+  var KEYS = (C.keys || []).slice(), PREFIXES = C.prefixes || [];
+  var CONTENT = C.content || '', LOCK = C.lock !== false;
+  if (CONTENT && KEYS.indexOf(CONTENT) < 0) KEYS.push(CONTENT);
   var API = 'https://api.github.com';
   var LS; try { LS = window.localStorage; LS.getItem('x'); } catch (e) { return; }
 
@@ -63,6 +74,8 @@
       denied: "Cette clé n'a pas accès au dépôt {r}.", rate: 'GitHub demande de patienter un peu. Nouvel essai plus tard.',
       net: 'Hors ligne. Les changements partiront au retour du réseau.', other: 'Erreur GitHub {s}. Nouvel essai plus tard.',
       pending: 'Changements en attente d’envoi.', got: 'Reçu d’un autre appareil.', empty: 'Collez une clé.',
+      lockT: 'Cette app demande une clé', lockP: 'Collez la clé GitHub qu’on vous a donnée pour cette app. Il suffit de le faire une fois sur cet appareil.',
+      opening: 'Ouverture…', firstNet: 'Connectez-vous à Internet pour l’ouvrir la première fois sur cet appareil.',
       locale: 'fr-FR'
     },
     en: {
@@ -75,6 +88,8 @@
       denied: 'This key isn’t allowed on the repo {r}.', rate: 'GitHub asked to wait a little. Trying again later.',
       net: 'Offline. Changes will go out when you’re back online.', other: 'GitHub error {s}. Trying again later.',
       pending: 'Changes waiting to go out.', got: 'Received from another device.', empty: 'Paste a key.',
+      lockT: 'This app needs a key', lockP: 'Paste the GitHub key you were given for this app. You only do this once on this device.',
+      opening: 'Opening…', firstNet: 'Connect to the internet to open it the first time on this device.',
       locale: 'en-GB'
     }
   };
@@ -263,7 +278,7 @@
     Object.keys(times).forEach(function (k) { S.t[k] = Math.max(S.t[k] || 0, times[k] || 0); });
     if (!changed.length) return changed;
     status.got = Date.now();
-    if (C.reload) { saveState(); setTimeout(function () { location.reload(); }, 50); return changed; }
+    if (C.reload || (CONTENT && changed.indexOf(CONTENT) >= 0)) { saveState(); setTimeout(function () { location.reload(); }, 50); return changed; }
     changed.forEach(function (k) {
       try { window.dispatchEvent(new StorageEvent('storage', { key: k, oldValue: olds[k], newValue: data[k] == null ? null : data[k], storageArea: LS, url: location.href })); } catch (e) {}
     });
@@ -328,8 +343,49 @@
     '.as-btn{font:inherit;font-weight:700;font-size:14px;border-radius:10px;padding:9px 16px;cursor:pointer;border:1px solid var(--au-accent,#0f6b5c);background:transparent;color:var(--au-accent,#0f6b5c)}' +
     '.as-btn.as-go{background:var(--au-accent,#0f6b5c);color:#fff}.as-btn:disabled{opacity:.55;cursor:default}' +
     '.as-link{font:inherit;font-size:13px;background:none;border:0;color:inherit;opacity:.7;text-decoration:underline;cursor:pointer;padding:4px}' +
-    '.as-btn:focus-visible,.as-link:focus-visible,.as input:focus-visible{outline:2px solid var(--au-accent,#0f6b5c);outline-offset:2px}';
-  var host;
+    '.as-btn:focus-visible,.as-link:focus-visible,.as input:focus-visible{outline:2px solid var(--au-accent,#0f6b5c);outline-offset:2px}' +
+    'html.as-locked,html.as-locked body{overflow:hidden!important}' +
+    '.as-lock{position:fixed;inset:0;z-index:2147483600;display:flex;align-items:center;justify-content:center;padding:24px 18px calc(24px + env(safe-area-inset-bottom,0px));background:Canvas;color:CanvasText;color-scheme:light dark;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;font-size:15px;overflow:auto}' +
+    '.as-lock[hidden]{display:none}.as-lock .as-card{width:100%;max-width:400px;display:grid;gap:12px}' +
+    '.as-lock h2{margin:0;font-size:22px}.as-lock .as-app{font-size:13px;opacity:.65;font-weight:700;letter-spacing:.04em;text-transform:uppercase}' +
+    '.as-lock p{margin:0;opacity:.8;line-height:1.45}.as-lock .as-err{color:#d0443e;opacity:1}' +
+    '.as-lock label{display:grid;gap:4px;font-size:13px;opacity:.9}.as-lock input{font:inherit;font-size:16px;padding:11px 12px;border-radius:10px;border:1px solid rgba(127,127,127,.5);background:transparent;color:inherit;width:100%;box-sizing:border-box}' +
+    '.as-lock form{display:grid;gap:14px}.as-lock .as-btn{font-size:16px;padding:12px 16px}';
+  var host, lockEl;
+  var APPNAME = (document.querySelector('meta[name="apple-mobile-web-app-title"]') || {}).content || document.title;
+  function connect(root) {
+    var k = (root.querySelector('input[name=k]').value || '').trim(), d = (root.querySelector('input[name=d]').value || '').trim();
+    if (!k) { form.err = T().empty; render(); return; }
+    put(K_APP, k); if (!get(K_SHARED)) put(K_SHARED, k); del(K_OFF);
+    if (d) put(K_DEV, d);
+    S = { t: S.t || {} }; status.state = 'busy'; status.msg = ''; form.open = false; form.err = ''; render();
+    sync();
+  }
+  var refused = function () { return status.state === 'err' && /^(badkey|denied|norepo)$/.test(status.msg); };
+  function locked() {
+    if (!LOCK) return false;
+    if (!token() || refused() || !S.last) return true; // never opened before the key has worked once
+    return !!CONTENT && get(CONTENT) == null;
+  }
+  function renderLock() {
+    if (!lockEl) return;
+    var on = locked();
+    lockEl.hidden = !on; document.documentElement.classList.toggle('as-locked', on);
+    if (!on) return;
+    var w = T(), ask = !token() || refused();
+    var err = form.err || (status.state === 'err' ? (w[status.msg] || w.other).replace('{r}', REPO).replace('{s}', status.code || '') : '');
+    if (ask && lockEl.querySelector('form') && lockEl.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') {
+      lockEl.querySelector('.as-err').textContent = err; return; // don't wipe what is being typed
+    }
+    lockEl.innerHTML = '<div class="as-card"><div class="as-app">' + esc(APPNAME) + '</div>' + (ask ?
+      '<h2>' + esc(w.lockT) + '</h2><p>' + esc(w.lockP) + '</p><form autocomplete="off">' +
+      '<label>' + esc(w.keyL) + '<input name="k" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…"></label>' +
+      '<label>' + esc(w.devL) + '<input name="d" type="text" value="' + esc(device()) + '"></label>' +
+      '<p class="as-err" aria-live="polite">' + esc(err) + '</p>' +
+      '<button class="as-btn as-go" type="submit">' + esc(w.connect) + '</button></form>' :
+      '<h2>' + esc(status.state === 'err' && status.msg === 'net' ? w.firstNet : w.opening) + '</h2>' +
+      (err && status.msg !== 'net' ? '<p class="as-err">' + esc(err) + '</p>' : '')) + '</div>';
+  }
   function mount() {
     var st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
     host = document.getElementById('app-sync');
@@ -339,6 +395,12 @@
       if (upd && upd.parentNode) upd.parentNode.insertBefore(host, upd); else document.body.appendChild(host);
     }
     host.classList.add('as');
+    if (LOCK) {
+      lockEl = document.createElement('div'); lockEl.className = 'as-lock'; lockEl.hidden = true;
+      lockEl.setAttribute('role', 'dialog'); lockEl.setAttribute('aria-modal', 'true');
+      document.body.appendChild(lockEl);
+      lockEl.addEventListener('submit', function (e) { e.preventDefault(); connect(lockEl); });
+    }
     host.addEventListener('click', function (e) {
       var b = e.target.closest('[data-as]'); if (!b) return;
       var a = b.getAttribute('data-as');
@@ -346,18 +408,12 @@
       else if (a === 'open') { form.open = true; render(); var i = host.querySelector('input[name=k]'); if (i) i.focus(); }
       else if (a === 'cancel') { form.open = false; form.err = ''; render(); }
       else if (a === 'disc') {
-        del(K_APP); put(K_OFF, '1'); S = { t: {} }; saveState(); status = { state: 'idle', msg: '' }; render();
+        del(K_APP); put(K_OFF, '1'); S = { t: {} }; saveState(); status = { state: 'idle', msg: '' };
+        if (LOCK && CONTENT) { del(CONTENT); location.reload(); return; }
+        render();
       }
     });
-    host.addEventListener('submit', function (e) {
-      e.preventDefault();
-      var k = (host.querySelector('input[name=k]').value || '').trim(), d = (host.querySelector('input[name=d]').value || '').trim();
-      if (!k) { form.err = T().empty; render(); return; }
-      put(K_APP, k); if (!get(K_SHARED)) put(K_SHARED, k); del(K_OFF);
-      if (d) put(K_DEV, d);
-      S = { t: S.t || {} }; status.state = 'busy'; form.open = false; form.err = ''; render();
-      sync();
-    });
+    host.addEventListener('submit', function (e) { e.preventDefault(); connect(host); });
     render();
   }
   function ago(t) {
@@ -370,13 +426,14 @@
   }
   function info() {
     var w = T(), st = status.state;
-    return { connected: !!token(), state: token() ? st : 'idle', pending: !!S.dirty,
+    return { connected: !!token(), locked: locked(), state: token() ? st : 'idle', pending: !!S.dirty,
       message: st === 'err' ? (w[status.msg] || w.other).replace('{r}', REPO).replace('{s}', status.code || '') : st === 'view' ? w.view : '' };
   }
   var lastInfo = '';
   function render() {
     var i = info(), k = JSON.stringify(i);
     if (k !== lastInfo) { lastInfo = k; try { window.dispatchEvent(new CustomEvent('appsyncstatus', { detail: i })); } catch (e) {} }
+    renderLock();
     if (!host) return;
     var w = T(), on = !!token();
     if (host.contains(document.activeElement) && document.activeElement.tagName === 'INPUT') return; // don't wipe what is being typed

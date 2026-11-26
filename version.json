@@ -1,9 +1,8 @@
 {
-  "v": "202611260256",
-  "version": "1.1.0",
+  "v": "202611260452",
+  "version": "1.2.0",
   "date": "2026-11-26",
   "notes": [
-    "The budget now opens with your own GitHub key, set once per phone in Sync between devices at the bottom; the family passphrase is gone.",
-    "The budget data moved to a private repo that only the keys you choose can open."
+    "The key is now asked for on the first screen, with the box to paste it right there."
   ]
 }
